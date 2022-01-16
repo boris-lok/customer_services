@@ -1,0 +1,63 @@
+[package]
+name = "customer_services"
+version = "0.1.0"
+edition = "2021"
+authors = ["boris <boris.lok.tw@outlook.com>"]
+
+[dependencies]
+
+
+[dependencies.tokio]
+version = "1.15.0"
+features = ["full"]
+
+[dependencies.futures]
+version = "0.3.19"
+
+[dependencies.warp]
+version = "0.3.2"
+features = ["tokio-rustls", "compression-gzip", "websocket"]
+
+[dependencies.serde]
+version = "1.0.132"
+features = ["derive"]
+
+[dependencies.sqlx]
+version = "0.5.9"
+features = ["runtime-tokio-rustls", "all-types", "postgres"]
+
+[dependencies.chrono]
+version = "0.4.19"
+features = ["serde"]
+
+[dependencies.uuid]
+version = "0.8.2"
+features = ["v4", "serde"]
+
+[dependencies.async-trait]
+version = "0.1.52"
+
+[dependencies.sea-query]
+version = "0.20.0"
+features = ["derive", "postgres-types", "postgres-uuid", "postgres-chrono"]
+
+[dependencies.tracing]
+version = "0.1.29"
+
+[dependencies.tracing-subscriber]
+version = "0.3.5"
+
+[dependencies.thiserror]
+version = "1.0.30"
+
+[dependencies.anyhow]
+version = "1.0.52"
+
+[dependencies.r2d2_redis]
+version = "0.14.0"
+
+[dependencies.mockall]
+version = "0.11.0"
+
+[dependencies.dotenv]
+version = "0.15.0"
