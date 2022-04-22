@@ -8,15 +8,11 @@ authors = ["boris <boris.lok.tw@outlook.com>"]
 
 
 [dependencies.tokio]
-version = "1.15.0"
+version = "1.17.0"
 features = ["full"]
 
 [dependencies.futures]
 version = "0.3.19"
-
-[dependencies.warp]
-version = "0.3.2"
-features = ["tokio-rustls", "compression-gzip", "websocket"]
 
 [dependencies.serde]
 version = "1.0.132"
@@ -53,11 +49,18 @@ version = "1.0.30"
 [dependencies.anyhow]
 version = "1.0.52"
 
-[dependencies.r2d2_redis]
-version = "0.14.0"
-
 [dependencies.mockall]
 version = "0.11.0"
 
 [dependencies.dotenv]
 version = "0.15.0"
+
+[dependencies.tonic]
+version = "0.7.1"
+
+[dependencies.prost]
+version = "0.10.1"
+
+
+[build-dependencies]
+tonic-build = "0.7.0"
