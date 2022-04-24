@@ -4,7 +4,7 @@ use sqlx::FromRow;
 
 use crate::pb;
 
-#[derive(Debug, FromRow, Serialize, Deserialize)]
+#[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
 pub struct Customer {
     pub id: i64,
     pub name: String,

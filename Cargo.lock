@@ -310,6 +310,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "futures",
+ "lazy_static",
  "prost",
  "r2d2_redis",
  "sea-query",

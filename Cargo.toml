@@ -59,6 +59,9 @@ version = "0.10.1"
 [dependencies.r2d2_redis]
 version = "0.14.0"
 
+[dependencies.lazy_static]
+version = "1.4.0"
+
 [dependencies.snowflake]
 git = "https://github.com/boris-lok/snowflake"
 branch = "master"
