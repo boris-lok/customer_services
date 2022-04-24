@@ -38,7 +38,14 @@ impl CustomerServices for CustomerServicesImpl {
 		&self,
 		request: Request<GetCustomerRequest>,
 	) -> Result<Response<GetCustomerResponse>, Status> {
-		todo!()
+		let id = request.into_inner().id;
+		let c = self.repo.get(id as i64).await.unwrap();
+		
+		let message = GetCustomerResponse {
+			customer: c.map(|e| e.into())
+		};
+
+		Ok(Response::new(message))
 	}
 
 	async fn list(

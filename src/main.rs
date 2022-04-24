@@ -18,6 +18,9 @@ mod pb {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
+
+	dotenv::from_path("config/dev.env");
+
 	let postgres = PostgresConfig::new();
 
 	let database_connection = create_database_connection(postgres).await.unwrap();
