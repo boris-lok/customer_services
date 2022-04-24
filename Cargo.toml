@@ -56,5 +56,12 @@ version = "0.7.1"
 [dependencies.prost]
 version = "0.10.1"
 
+[dependencies.r2d2_redis]
+version = "0.14.0"
+
+[dependencies.snowflake]
+git = "https://github.com/boris-lok/snowflake"
+branch = "master"
+
 [build-dependencies]
 tonic-build = "0.7.0"
