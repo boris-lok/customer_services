@@ -7,5 +7,5 @@ use crate::pb::CreateCustomerRequest;
 pub trait CustomerRepo {
 	async fn get(&self, id: i64) -> AppResult<Option<Customer>>;
 
-	// async fn create(&self, CreateCustomerRequest) -> AppResult<Customer>;
+	async fn create(&self, request: CreateCustomerRequest) -> AppResult<Customer>;
 }

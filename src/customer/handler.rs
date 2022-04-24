@@ -24,7 +24,11 @@ impl CustomerServices for CustomerServicesImpl {
 		&self,
 		request: Request<CreateCustomerRequest>,
 	) -> Result<Response<Customer>, Status> {
-		todo!()
+		let request = request.into_inner();
+
+		let customer = self.repo.create(request).await.unwrap();
+
+		Ok(Response::new(customer.into()))
 	}
 
 	async fn update(
@@ -40,7 +44,7 @@ impl CustomerServices for CustomerServicesImpl {
 	) -> Result<Response<GetCustomerResponse>, Status> {
 		let id = request.into_inner().id;
 		let c = self.repo.get(id as i64).await.unwrap();
-		
+
 		let message = GetCustomerResponse {
 			customer: c.map(|e| e.into())
 		};

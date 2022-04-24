@@ -1,6 +1,6 @@
 use sea_query::Iden;
 
-#[derive(Iden)]
+#[derive(Iden, Clone)]
 pub enum Customers {
     Table,
     Id,

@@ -15,7 +15,7 @@ use crate::pb::CreateCustomerRequest;
 
 #[derive(Debug, Clone)]
 pub struct PostgresCustomerRepo {
-	connection_pool: Arc<Pool<Postgres>>
+	connection_pool: Arc<Pool<Postgres>>,
 }
 
 impl PostgresCustomerRepo {
@@ -44,6 +44,33 @@ impl CustomerRepo for PostgresCustomerRepo {
 
 		let customer = sqlx::query_as::<_, Customer>(&sql)
 			.fetch_optional(&*self.connection_pool)
+			.await
+			.map_err(|e| AppError::DatabaseError(e.to_string()));
+
+		customer
+	}
+
+	async fn create(&self, request: CreateCustomerRequest) -> AppResult<Customer> {
+		use chrono::Utc;
+		let name = request.name.clone().into();
+		let email = request.email.into();
+		let phone = request.phone.into();
+
+		let cols: Vec<Customers> = vec![Customers::Id, Customers::Name, Customers::Email, Customers::Phone, Customers::CreatedAt];
+
+		let sql = Query::insert()
+			.into_table(Customers::Table)
+			.columns(cols.clone())
+			.values_panic(vec!["1".into(), name, email, phone, Utc::now().into()])
+			.returning(Query::select()
+				.columns(cols)
+				.take())
+			.to_string(PostgresQueryBuilder);
+
+		dbg!(&sql);
+
+		let customer = sqlx::query_as::<_, Customer>(&sql)
+			.fetch_one(&*self.connection_pool)
 			.await
 			.map_err(|e| AppError::DatabaseError(e.to_string()));
 
