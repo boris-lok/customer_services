@@ -1,5 +1,6 @@
-use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
+use sea_query::Query;
+use sqlx::{Acquire, PgConnection, Postgres, Transaction};
 
 use common::utils::alias::AppResult;
 use common::utils::error::AppError;
@@ -7,8 +8,6 @@ use common::utils::error::AppError;
 use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
 use crate::pb::CreateCustomerRequest;
-
-use sqlx::{Acquire, PgConnection, Postgres, Transaction};
 
 #[derive(Debug, Default)]
 pub struct PostgresCustomerRepo {}

@@ -1,16 +1,17 @@
 use std::ops::DerefMut;
 use std::sync::Arc;
-use tonic::{Request, Response, Status};
 
-use crate::pb::customer_services_server::CustomerServices;
+use sqlx::{Pool, Postgres};
+use tonic::{Request, Response, Status};
+use tracing::{warn, warn_span};
+
+use common::utils::alias::AppResult;
+
 use crate::pb::{
     CreateCustomerRequest, Customer, GetCustomerRequest, GetCustomerResponse, ListCustomerRequest,
     ListCustomerResponse, UpdateCustomerRequest,
 };
-
-use common::utils::alias::AppResult;
-use sqlx::{Pool, Postgres};
-use tracing::{warn, warn_span};
+use crate::pb::customer_services_server::CustomerServices;
 
 use super::repo::postgres_repo::PostgresCustomerRepo;
 
