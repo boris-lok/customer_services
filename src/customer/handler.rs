@@ -1,22 +1,26 @@
+use std::ops::DerefMut;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 use crate::pb::customer_services_server::CustomerServices;
 use crate::pb::{
     CreateCustomerRequest, Customer, GetCustomerRequest, GetCustomerResponse, ListCustomerRequest,
-    ListCustomerResponse, UpdateCustomerRequest 
+    ListCustomerResponse, UpdateCustomerRequest,
 };
 
-use super::uow::UnitOfWork;
 use common::utils::alias::AppResult;
+use sqlx::{Pool, Postgres};
+use tracing::{warn, warn_span};
+
+use super::repo::postgres_repo::PostgresCustomerRepo;
 
 pub struct CustomerServicesImpl {
-    uow: Arc<UnitOfWork>,
+    session: Pool<Postgres>,
 }
 
 impl CustomerServicesImpl {
-    pub fn new(uow: Arc<UnitOfWork>) -> Self {
-        Self { uow }
+    pub fn new(session: Pool<Postgres>) -> Self {
+        Self { session }
     }
 }
 
@@ -28,20 +32,14 @@ impl CustomerServices for CustomerServicesImpl {
     ) -> Result<Response<Customer>, Status> {
         let request = request.into_inner();
 
-        let bt = self.uow.begin_transaction().await;
-        if bt.is_ok() {
-            let customer: AppResult<super::json::customer::Customer> = self.uow.repo.create(request).await;
+        let mut bt = self.session.clone().begin().await.unwrap();
+        let customer = PostgresCustomerRepo::create(request, &mut *bt).await;
 
-            let _ = self.uow.commit().await;
-
-            if customer.is_err() {
-                let _ = self.uow.rollback().await.unwrap();
-            }
-            
+        if let Ok(_) = bt.commit().await {
             return Ok(Response::new(customer.unwrap().into()));
         }
 
-        Err(Status::failed_precondition("Database error."))
+        Err(Status::failed_precondition("Database query error."))
     }
 
     async fn update(
@@ -56,13 +54,19 @@ impl CustomerServices for CustomerServicesImpl {
         request: Request<GetCustomerRequest>,
     ) -> Result<Response<GetCustomerResponse>, Status> {
         let id = request.into_inner().id;
-        let c = self.uow.repo.get(id as i64).await.unwrap();
 
-        let message = GetCustomerResponse {
-            customer: c.map(|e| e.into()),
-        };
+        let conn = self.session.clone();
+        let c = PostgresCustomerRepo::get(id as i64, &conn).await;
 
-        Ok(Response::new(message))
+        if let Ok(c) = c {
+            let message = GetCustomerResponse {
+                customer: c.map(|e| e.into()),
+            };
+
+            return Ok(Response::new(message));
+        }
+
+        Err(Status::failed_precondition("Database query error."))
     }
 
     async fn list(

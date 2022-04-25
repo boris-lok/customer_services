@@ -1,32 +1,25 @@
-use std::sync::Arc;
-
-use async_trait::async_trait;
 use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
-use sqlx::{Pool, Postgres};
 
 use common::utils::alias::AppResult;
 use common::utils::error::AppError;
 
 use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
-use crate::customer::repo::repo::CustomerRepo;
 use crate::pb::CreateCustomerRequest;
 
-#[derive(Debug, Clone)]
-pub struct PostgresCustomerRepo {
-    connection_pool: Arc<Pool<Postgres>>,
-}
+use sqlx::{Acquire, PgConnection, Postgres, Transaction};
+
+#[derive(Debug, Default)]
+pub struct PostgresCustomerRepo {}
 
 impl PostgresCustomerRepo {
-    pub fn new(connection_pool: Arc<Pool<Postgres>>) -> Self {
-        Self { connection_pool }
-    }
-}
+    pub async fn get<'c, C>(id: i64, conn: C) -> AppResult<Option<Customer>>
+    where
+        C: Acquire<'c, Database = Postgres>,
+    {
+        let mut conn = conn.acquire().await.unwrap();
 
-#[async_trait]
-impl CustomerRepo for PostgresCustomerRepo {
-    async fn get(&self, id: i64) -> AppResult<Option<Customer>> {
         let sql = Query::select()
             .columns(vec![
                 Customers::Id,
@@ -42,16 +35,18 @@ impl CustomerRepo for PostgresCustomerRepo {
 
         dbg!(&sql);
 
-        let customer = sqlx::query_as::<_, Customer>(&sql)
-            .fetch_optional(&*self.connection_pool)
+        sqlx::query_as::<_, Customer>(&sql)
+            .fetch_optional(&mut *conn)
             .await
-            .map_err(|e| AppError::DatabaseError(e.to_string()));
-
-        customer
+            .map_err(|e| AppError::DatabaseError(e.to_string()))
     }
 
-    async fn create(&self, request: CreateCustomerRequest) -> AppResult<Customer> {
+    pub async fn create(
+        request: CreateCustomerRequest,
+        conn: &mut PgConnection,
+    ) -> AppResult<Customer> {
         use chrono::Utc;
+
         let name = request.name.clone().into();
         let email = request.email.into();
         let phone = request.phone.into();
@@ -73,11 +68,9 @@ impl CustomerRepo for PostgresCustomerRepo {
 
         dbg!(&sql);
 
-        let customer = sqlx::query_as::<_, Customer>(&sql)
-            .fetch_one(&*self.connection_pool)
+        sqlx::query_as::<_, Customer>(&sql)
+            .fetch_one(&mut *conn)
             .await
-            .map_err(|e| AppError::DatabaseError(e.to_string()));
-
-        customer
+            .map_err(|e| AppError::DatabaseError(e.to_string()))
     }
 }
