@@ -1,61 +1,74 @@
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::customer::repo::repo::CustomerRepo;
-use crate::pb::{
-	CreateCustomerRequest, Customer, GetCustomerRequest, GetCustomerResponse, ListCustomerRequest,
-	ListCustomerResponse, UpdateCustomerRequest,
-};
 use crate::pb::customer_services_server::CustomerServices;
+use crate::pb::{
+    CreateCustomerRequest, Customer, GetCustomerRequest, GetCustomerResponse, ListCustomerRequest,
+    ListCustomerResponse, UpdateCustomerRequest 
+};
+
+use super::uow::UnitOfWork;
+use common::utils::alias::AppResult;
 
 pub struct CustomerServicesImpl {
-	repo: Arc<Box<dyn CustomerRepo + Send + Sync + 'static>>,
+    uow: Arc<UnitOfWork>,
 }
 
 impl CustomerServicesImpl {
-	pub fn new(repo: Arc<Box<dyn CustomerRepo + Send + Sync + 'static>>) -> Self {
-		Self { repo }
-	}
+    pub fn new(uow: Arc<UnitOfWork>) -> Self {
+        Self { uow }
+    }
 }
 
 #[tonic::async_trait]
 impl CustomerServices for CustomerServicesImpl {
-	async fn create(
-		&self,
-		request: Request<CreateCustomerRequest>,
-	) -> Result<Response<Customer>, Status> {
-		let request = request.into_inner();
+    async fn create(
+        &self,
+        request: Request<CreateCustomerRequest>,
+    ) -> Result<Response<Customer>, Status> {
+        let request = request.into_inner();
 
-		let customer = self.repo.create(request).await.unwrap();
+        let bt = self.uow.begin_transaction().await;
+        if bt.is_ok() {
+            let customer: AppResult<super::json::customer::Customer> = self.uow.repo.create(request).await;
 
-		Ok(Response::new(customer.into()))
-	}
+            let _ = self.uow.commit().await;
 
-	async fn update(
-		&self,
-		request: Request<UpdateCustomerRequest>,
-	) -> Result<Response<Customer>, Status> {
-		todo!()
-	}
+            if customer.is_err() {
+                let _ = self.uow.rollback().await.unwrap();
+            }
+            
+            return Ok(Response::new(customer.unwrap().into()));
+        }
 
-	async fn get(
-		&self,
-		request: Request<GetCustomerRequest>,
-	) -> Result<Response<GetCustomerResponse>, Status> {
-		let id = request.into_inner().id;
-		let c = self.repo.get(id as i64).await.unwrap();
+        Err(Status::failed_precondition("Database error."))
+    }
 
-		let message = GetCustomerResponse {
-			customer: c.map(|e| e.into())
-		};
+    async fn update(
+        &self,
+        request: Request<UpdateCustomerRequest>,
+    ) -> Result<Response<Customer>, Status> {
+        todo!()
+    }
 
-		Ok(Response::new(message))
-	}
+    async fn get(
+        &self,
+        request: Request<GetCustomerRequest>,
+    ) -> Result<Response<GetCustomerResponse>, Status> {
+        let id = request.into_inner().id;
+        let c = self.uow.repo.get(id as i64).await.unwrap();
 
-	async fn list(
-		&self,
-		request: Request<ListCustomerRequest>,
-	) -> Result<Response<ListCustomerResponse>, Status> {
-		todo!()
-	}
+        let message = GetCustomerResponse {
+            customer: c.map(|e| e.into()),
+        };
+
+        Ok(Response::new(message))
+    }
+
+    async fn list(
+        &self,
+        request: Request<ListCustomerRequest>,
+    ) -> Result<Response<ListCustomerResponse>, Status> {
+        todo!()
+    }
 }

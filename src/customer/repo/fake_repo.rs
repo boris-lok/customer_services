@@ -23,7 +23,6 @@ lazy_static::lazy_static! {
 #[derive(Debug, Default)]
 pub struct FakeCustomerRepo {}
 
-
 #[cfg(test)]
 #[async_trait::async_trait]
 impl CustomerRepo for FakeCustomerRepo {
@@ -41,7 +40,7 @@ impl CustomerRepo for FakeCustomerRepo {
             email: request.email.clone(),
             phone: request.phone,
             created_at: chrono::Utc::now(),
-            updated_at: None
+            updated_at: None,
         };
         customers.insert(id, c.clone());
         Ok(c)
@@ -57,7 +56,7 @@ mod test {
         let r = CreateCustomerRequest {
             name: "boris".to_string(),
             email: None,
-            phone: None
+            phone: None,
         };
         let repo = FakeCustomerRepo::default();
         let response = repo.create(r.clone()).await;
@@ -74,7 +73,7 @@ mod test {
         let r = CreateCustomerRequest {
             name: "boris".to_string(),
             email: None,
-            phone: None
+            phone: None,
         };
         let repo = FakeCustomerRepo::default();
         let response = repo.create(r.clone()).await;
@@ -90,6 +89,5 @@ mod test {
                 panic!("failed! Can't retrieve a customer by id.")
             }
         }
-
     }
 }
