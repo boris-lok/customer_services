@@ -35,7 +35,7 @@ impl CustomerServices for CustomerServicesImpl {
         let mut bt = self.session.clone().begin().await.unwrap();
         let customer = PostgresCustomerRepo::create(request, &mut *bt).await;
 
-        if let Ok(_) = bt.commit().await {
+        if (bt.commit().await).is_ok() {
             return Ok(Response::new(customer.unwrap().into()));
         }
 
