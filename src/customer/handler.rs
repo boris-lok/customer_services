@@ -13,8 +13,6 @@ use crate::pb::{
 };
 use crate::pb::customer_services_server::CustomerServices;
 
-use super::repo::postgres_repo::PostgresCustomerRepo;
-
 pub struct CustomerServicesImpl {
     session: Pool<Postgres>,
 }
@@ -31,6 +29,8 @@ impl CustomerServices for CustomerServicesImpl {
         &self,
         request: Request<CreateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
+        todo!()
+        /*
         let request = request.into_inner();
 
         let mut bt = self.session.clone().begin().await.unwrap();
@@ -41,6 +41,7 @@ impl CustomerServices for CustomerServicesImpl {
         }
 
         Err(Status::failed_precondition("Database query error."))
+         */
     }
 
     async fn update(
@@ -54,6 +55,8 @@ impl CustomerServices for CustomerServicesImpl {
         &self,
         request: Request<GetCustomerRequest>,
     ) -> Result<Response<GetCustomerResponse>, Status> {
+        todo!()
+        /*
         let id = request.into_inner().id;
 
         let conn = self.session.clone();
@@ -68,6 +71,7 @@ impl CustomerServices for CustomerServicesImpl {
         }
 
         Err(Status::failed_precondition("Database query error."))
+         */
     }
 
     async fn list(

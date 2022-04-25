@@ -9,37 +9,44 @@ use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
 use crate::pb::CreateCustomerRequest;
 
-#[derive(Debug, Default)]
-pub struct PostgresCustomerRepo {}
+use async_trait::async_trait;
+use crate::customer::repo::CustomerRepo;
+use crate::utils::alias::PostgresAcquire;
 
+pub struct CustomerRepoImpl;
+
+
+/// references: https://qiita.com/FuJino/items/08b4c3298918191eab65
+
+#[async_trait]
+impl CustomerRepo for CustomerRepoImpl {
+	async fn get(&self, id: i64, executor: impl PostgresAcquire<'_> + 'async_trait) -> AppResult<Option<Customer>> {
+		let mut conn = executor.acquire().await.unwrap();
+
+		let sql = Query::select()
+			.columns(vec![
+				Customers::Id,
+				Customers::Name,
+				Customers::Email,
+				Customers::Phone,
+				Customers::CreatedAt,
+				Customers::UpdatedAt,
+			])
+			.from(Customers::Table)
+			.and_where(Expr::col(Customers::Id).eq(id))
+			.to_string(PostgresQueryBuilder);
+
+		dbg!(&sql);
+
+		sqlx::query_as::<_, Customer>(&sql)
+			.fetch_optional(&mut *conn)
+			.await
+			.map_err(|e| AppError::DatabaseError(e.to_string()))
+	}
+}
+
+/*
 impl PostgresCustomerRepo {
-    pub async fn get<'c, C>(id: i64, conn: C) -> AppResult<Option<Customer>>
-    where
-        C: Acquire<'c, Database = Postgres>,
-    {
-        let mut conn = conn.acquire().await.unwrap();
-
-        let sql = Query::select()
-            .columns(vec![
-                Customers::Id,
-                Customers::Name,
-                Customers::Email,
-                Customers::Phone,
-                Customers::CreatedAt,
-                Customers::UpdatedAt,
-            ])
-            .from(Customers::Table)
-            .and_where(Expr::col(Customers::Id).eq(id))
-            .to_string(PostgresQueryBuilder);
-
-        dbg!(&sql);
-
-        sqlx::query_as::<_, Customer>(&sql)
-            .fetch_optional(&mut *conn)
-            .await
-            .map_err(|e| AppError::DatabaseError(e.to_string()))
-    }
-
     pub async fn create(
         request: CreateCustomerRequest,
         conn: &mut PgConnection,
@@ -73,3 +80,4 @@ impl PostgresCustomerRepo {
             .map_err(|e| AppError::DatabaseError(e.to_string()))
     }
 }
+*/

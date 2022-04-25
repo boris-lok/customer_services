@@ -10,6 +10,7 @@ use crate::customer::handler::CustomerServicesImpl;
 use crate::pb::customer_services_server::CustomerServicesServer;
 
 mod customer;
+mod utils;
 
 mod pb {
     include!("../gen/grpc.customer.rs");
