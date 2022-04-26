@@ -1,5 +1,6 @@
 /target
 .idea
-config/dev.env
+env/dev.env
+env/prod.env
 common
 proto/

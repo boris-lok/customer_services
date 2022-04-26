@@ -16,7 +16,7 @@ mod pb {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    dotenv::from_path("config/dev.env");
+    dotenv::from_path("env/dev.env");
 
     let postgres = PostgresConfig::new();
 
