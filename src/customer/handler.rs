@@ -1,17 +1,13 @@
-use std::ops::DerefMut;
-use std::sync::Arc;
-
 use sqlx::{Pool, Postgres};
 use tonic::{Request, Response, Status};
-use tracing::{warn, warn_span};
 
-use common::utils::alias::AppResult;
-
+use crate::pb::customer_services_server::CustomerServices;
 use crate::pb::{
     CreateCustomerRequest, Customer, GetCustomerRequest, GetCustomerResponse, ListCustomerRequest,
     ListCustomerResponse, UpdateCustomerRequest,
 };
-use crate::pb::customer_services_server::CustomerServices;
+
+use super::services::CustomerService;
 
 pub struct CustomerServicesImpl {
     session: Pool<Postgres>,
@@ -29,24 +25,22 @@ impl CustomerServices for CustomerServicesImpl {
         &self,
         request: Request<CreateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
-        todo!()
-        /*
         let request = request.into_inner();
 
-        let mut bt = self.session.clone().begin().await.unwrap();
-        let customer = PostgresCustomerRepo::create(request, &mut *bt).await;
+        let services = super::services::CustomerServiceImpl::new(self.session.clone());
 
-        if (bt.commit().await).is_ok() {
-            return Ok(Response::new(customer.unwrap().into()));
+        let customer = services.create(request).await.map(|e| e.into());
+
+        if customer.is_err() {
+            return Err(Status::failed_precondition("failed to create a customer"));
         }
 
-        Err(Status::failed_precondition("Database query error."))
-         */
+        Ok(Response::new(customer.unwrap()))
     }
 
     async fn update(
         &self,
-        request: Request<UpdateCustomerRequest>,
+        _request: Request<UpdateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
         todo!()
     }
@@ -55,28 +49,24 @@ impl CustomerServices for CustomerServicesImpl {
         &self,
         request: Request<GetCustomerRequest>,
     ) -> Result<Response<GetCustomerResponse>, Status> {
-        todo!()
-        /*
         let id = request.into_inner().id;
 
-        let conn = self.session.clone();
-        let c = PostgresCustomerRepo::get(id as i64, &conn).await;
+        let services = super::services::CustomerServiceImpl::new(self.session.clone());
 
-        if let Ok(c) = c {
-            let message = GetCustomerResponse {
-                customer: c.map(|e| e.into()),
-            };
+        let customer = services.get(id as i64).await.map(|s| s.map(|e| e.into()));
 
-            return Ok(Response::new(message));
+        if customer.is_err() {
+            return Err(Status::failed_precondition("failed to get a customer."));
         }
 
-        Err(Status::failed_precondition("Database query error."))
-         */
+        Ok(Response::new(GetCustomerResponse {
+            customer: customer.unwrap(),
+        }))
     }
 
     async fn list(
         &self,
-        request: Request<ListCustomerRequest>,
+        _request: Request<ListCustomerRequest>,
     ) -> Result<Response<ListCustomerResponse>, Status> {
         todo!()
     }

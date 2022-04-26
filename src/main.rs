@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use tonic::transport::Server;
 
 use common::configs::postgres_config::PostgresConfig;
