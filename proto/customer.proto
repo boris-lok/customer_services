@@ -38,7 +38,7 @@ message ListCustomerResponse {
 }
 
 message ListCustomerRequest {
-    string query = 1;
+    optional string query = 1;
     optional uint64 cursor = 2;
     uint32 page_size = 3;
 }

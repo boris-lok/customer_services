@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use common::utils::alias::AppResult;
 use sqlx::{Pool, Postgres};
 
-use crate::pb::CreateCustomerRequest;
+use crate::pb::{CreateCustomerRequest, ListCustomerRequest};
 
 use super::{
     json::customer::Customer,
@@ -14,6 +14,8 @@ pub trait CustomerService {
     async fn get(&self, id: i64) -> AppResult<Option<Customer>>;
 
     async fn create(&self, request: CreateCustomerRequest) -> AppResult<Customer>;
+
+    async fn list(&self, request: ListCustomerRequest) -> AppResult<Vec<Customer>>;
 }
 
 pub struct CustomerServiceImpl {
@@ -44,5 +46,11 @@ impl CustomerService for CustomerServiceImpl {
         let _ = tx.commit().await.unwrap();
 
         customer
+    }
+
+    async fn list(&self, request: ListCustomerRequest) -> AppResult<Vec<Customer>> {
+        let repo = CustomerRepoImpl;
+
+        repo.list(request, &self.pool.clone()).await
     }
 }

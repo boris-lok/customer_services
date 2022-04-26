@@ -8,6 +8,7 @@ use crate::pb::{
 };
 
 use super::services::CustomerService;
+use super::services::CustomerServiceImpl;
 
 pub struct CustomerServicesImpl {
     session: Pool<Postgres>,
@@ -27,7 +28,7 @@ impl CustomerServices for CustomerServicesImpl {
     ) -> Result<Response<Customer>, Status> {
         let request = request.into_inner();
 
-        let services = super::services::CustomerServiceImpl::new(self.session.clone());
+        let services = CustomerServiceImpl::new(self.session.clone());
 
         let customer = services.create(request).await.map(|e| e.into());
 
@@ -51,7 +52,7 @@ impl CustomerServices for CustomerServicesImpl {
     ) -> Result<Response<GetCustomerResponse>, Status> {
         let id = request.into_inner().id;
 
-        let services = super::services::CustomerServiceImpl::new(self.session.clone());
+        let services = CustomerServiceImpl::new(self.session.clone());
 
         let customer = services.get(id as i64).await.map(|s| s.map(|e| e.into()));
 
@@ -66,8 +67,22 @@ impl CustomerServices for CustomerServicesImpl {
 
     async fn list(
         &self,
-        _request: Request<ListCustomerRequest>,
+        request: Request<ListCustomerRequest>,
     ) -> Result<Response<ListCustomerResponse>, Status> {
-        todo!()
+        let request = request.into_inner();
+
+        let services = CustomerServiceImpl::new(self.session.clone());
+
+        let customers = services.list(request).await.map(|e| {
+            let c = e.into_iter().map(|e| e.into()).collect::<_>();
+
+            ListCustomerResponse { customers: c }
+        });
+
+        if customers.is_err() {
+            return Err(Status::failed_precondition("failed to list customers"));
+        }
+
+        Ok(Response::new(customers.unwrap()))
     }
 }

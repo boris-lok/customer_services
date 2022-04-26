@@ -1,13 +1,12 @@
 use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
-use sqlx::Acquire;
 
 use common::utils::alias::AppResult;
 use common::utils::error::AppError;
 
 use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
-use crate::pb::CreateCustomerRequest;
+use crate::pb::{CreateCustomerRequest, ListCustomerRequest};
 
 use crate::customer::repo::CustomerRepo;
 use crate::utils::alias::PostgresAcquire;
@@ -79,6 +78,38 @@ impl CustomerRepo for CustomerRepoImpl {
 
         sqlx::query_as::<_, Customer>(&sql)
             .fetch_one(&mut *conn)
+            .await
+            .map_err(|e| AppError::DatabaseError(e.to_string()))
+    }
+
+    async fn list(
+        &self,
+        request: ListCustomerRequest,
+        executor: impl PostgresAcquire<'_> + 'async_trait,
+    ) -> AppResult<Vec<Customer>> {
+        let mut conn = executor.acquire().await.unwrap();
+
+        let cursor = request.cursor;
+        let query = request.query.map(|q| format!("%{}%", q));
+        let page_size = request.page_size;
+
+        let sql = Query::select()
+            .columns(vec![
+                Customers::Id,
+                Customers::Name,
+                Customers::Email,
+                Customers::Phone,
+                Customers::CreatedAt,
+                Customers::UpdatedAt,
+            ])
+            .and_where_option(query.map(|e| Expr::col(Customers::Name).like(&e)))
+            .and_where_option(cursor.map(|e| Expr::col(Customers::Id).eq(e)))
+            .from(Customers::Table)
+            .limit(page_size as u64)
+            .to_string(PostgresQueryBuilder);
+
+        sqlx::query_as::<_, Customer>(&sql)
+            .fetch_all(&mut *conn)
             .await
             .map_err(|e| AppError::DatabaseError(e.to_string()))
     }

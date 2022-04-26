@@ -33,8 +33,8 @@ pub struct ListCustomerResponse {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListCustomerRequest {
-    #[prost(string, tag="1")]
-    pub query: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="1")]
+    pub query: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(uint64, optional, tag="2")]
     pub cursor: ::core::option::Option<u64>,
     #[prost(uint32, tag="3")]

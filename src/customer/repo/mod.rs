@@ -1,5 +1,5 @@
 use crate::customer::json::customer::Customer;
-use crate::pb::CreateCustomerRequest;
+use crate::pb::{CreateCustomerRequest, ListCustomerRequest};
 use crate::utils::alias::PostgresAcquire;
 use async_trait::async_trait;
 use common::utils::alias::AppResult;
@@ -19,4 +19,10 @@ pub trait CustomerRepo {
         request: CreateCustomerRequest,
         executor: impl PostgresAcquire<'_> + 'async_trait,
     ) -> AppResult<Customer>;
+
+    async fn list(
+        &self,
+        request: ListCustomerRequest,
+        executor: impl PostgresAcquire<'_> + 'async_trait,
+    ) -> AppResult<Vec<Customer>>;
 }
