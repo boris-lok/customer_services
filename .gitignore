@@ -2,3 +2,4 @@
 .idea
 config/dev.env
 common
+proto/
