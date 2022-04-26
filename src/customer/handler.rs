@@ -41,9 +41,19 @@ impl CustomerServices for CustomerServicesImpl {
 
     async fn update(
         &self,
-        _request: Request<UpdateCustomerRequest>,
+        request: Request<UpdateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
-        todo!()
+        let request = request.into_inner();
+
+        let services = CustomerServiceImpl::new(self.session.clone());
+
+        let customer = services.update(request).await.map(|e| e.into());
+
+        if customer.is_err() {
+            return Err(Status::failed_precondition("failed to update a customer."));
+        }
+
+        Ok(Response::new(customer.unwrap()))
     }
 
     async fn get(

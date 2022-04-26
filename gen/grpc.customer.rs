@@ -9,11 +9,13 @@ pub struct CreateCustomerRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateCustomerRequest {
-    #[prost(string, optional, tag="1")]
-    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(uint64, tag="1")]
+    pub id: u64,
     #[prost(string, optional, tag="2")]
-    pub email: ::core::option::Option<::prost::alloc::string::String>,
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag="3")]
+    pub email: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
     pub phone: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

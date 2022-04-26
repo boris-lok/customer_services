@@ -20,9 +20,10 @@ message CreateCustomerRequest {
 }
 
 message UpdateCustomerRequest {
-    optional string name = 1;
-    optional string email = 2;
-    optional string phone = 3;
+    uint64 id = 1;
+    optional string name = 2;
+    optional string email = 3;
+    optional string phone = 4;
 }
 
 message GetCustomerRequest {

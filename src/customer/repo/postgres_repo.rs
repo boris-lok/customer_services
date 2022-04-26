@@ -6,7 +6,7 @@ use common::utils::error::AppError;
 
 use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
-use crate::pb::{CreateCustomerRequest, ListCustomerRequest};
+use crate::pb::{CreateCustomerRequest, ListCustomerRequest, UpdateCustomerRequest};
 
 use crate::customer::repo::CustomerRepo;
 use crate::utils::alias::PostgresAcquire;
@@ -111,6 +111,40 @@ impl CustomerRepo for CustomerRepoImpl {
         sqlx::query_as::<_, Customer>(&sql)
             .fetch_all(&mut *conn)
             .await
+            .map_err(|e| AppError::DatabaseError(e.to_string()))
+    }
+
+    async fn update(
+        &self,
+        request: UpdateCustomerRequest,
+        executor: impl PostgresAcquire<'_> + 'async_trait,
+    ) -> AppResult<bool> {
+        let mut conn = executor.acquire().await.unwrap();
+
+        let mut update_values = vec![];
+
+        if let Some(name) = request.name {
+            update_values.push((Customers::Name, name.into()));
+        }
+
+        if let Some(email) = request.email {
+            update_values.push((Customers::Email, email.into()));
+        }
+
+        if let Some(phone) = request.phone {
+            update_values.push((Customers::Phone, phone.into()));
+        }
+
+        let sql = Query::update()
+            .table(Customers::Table)
+            .values(update_values)
+            .and_where(Expr::col(Customers::Id).eq(request.id))
+            .to_string(PostgresQueryBuilder);
+
+        sqlx::query(&sql)
+            .execute(&mut *conn)
+            .await
+            .map(|e| e.rows_affected() > 0)
             .map_err(|e| AppError::DatabaseError(e.to_string()))
     }
 }
