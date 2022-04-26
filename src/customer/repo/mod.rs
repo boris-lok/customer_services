@@ -1,8 +1,7 @@
 use crate::customer::json::customer::Customer;
 use crate::pb::{CreateCustomerRequest, ListCustomerRequest, UpdateCustomerRequest};
-use crate::utils::alias::PostgresAcquire;
 use async_trait::async_trait;
-use common::utils::alias::AppResult;
+use common::utils::alias::{AppResult, PostgresAcquire};
 
 pub mod postgres_repo;
 

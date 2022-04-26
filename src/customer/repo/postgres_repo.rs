@@ -1,7 +1,7 @@
 use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
 
-use common::utils::alias::AppResult;
+use common::utils::alias::{AppResult, PostgresAcquire};
 use common::utils::error::AppError;
 
 use crate::customer::json::customer::Customer;
@@ -9,7 +9,6 @@ use crate::customer::json::table::Customers;
 use crate::pb::{CreateCustomerRequest, ListCustomerRequest, UpdateCustomerRequest};
 
 use crate::customer::repo::CustomerRepo;
-use crate::utils::alias::PostgresAcquire;
 use async_trait::async_trait;
 
 pub struct CustomerRepoImpl;
