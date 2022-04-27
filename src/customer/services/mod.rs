@@ -64,7 +64,7 @@ impl CustomerService for CustomerServiceImpl {
         let old_customer = repo.get(request.id as i64, &mut *tx).await.ok().flatten();
 
         if let Some(c) = old_customer {
-            let is_affected = repo.update(request.clone(), &self.pool.clone()).await;
+            let is_affected = repo.update(request.clone(), &mut *tx).await;
 
             tx.commit().await.unwrap();
 
