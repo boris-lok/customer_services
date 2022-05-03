@@ -1,15 +1,17 @@
+use async_trait::async_trait;
+use futures::FutureExt;
 use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
+use tracing::warn;
 
 use common::utils::alias::{AppResult, PostgresAcquire};
 use common::utils::error::AppError;
 
 use crate::customer::json::customer::Customer;
 use crate::customer::json::table::Customers;
-use crate::pb::{CreateCustomerRequest, ListCustomerRequest, UpdateCustomerRequest};
-
 use crate::customer::repo::CustomerRepo;
-use async_trait::async_trait;
+use crate::pb::{CreateCustomerRequest, ListCustomerRequest, UpdateCustomerRequest};
+use crate::ID_GENERATOR;
 
 pub struct CustomerRepoImpl;
 
@@ -54,9 +56,14 @@ impl CustomerRepo for CustomerRepoImpl {
 
         use chrono::Utc;
 
+        let id = async move { ID_GENERATOR.clone().lock().unwrap().next_id() }
+            .boxed()
+            .await as u64;
+
         let name = request.name.clone().into();
         let email = request.email.into();
         let phone = request.phone.into();
+        let created_at = Utc::now().into();
 
         let cols: Vec<Customers> = vec![
             Customers::Id,
@@ -64,12 +71,13 @@ impl CustomerRepo for CustomerRepoImpl {
             Customers::Email,
             Customers::Phone,
             Customers::CreatedAt,
+            Customers::UpdatedAt,
         ];
 
         let sql = Query::insert()
             .into_table(Customers::Table)
-            .columns(cols.clone())
-            .values_panic(vec!["1".into(), name, email, phone, Utc::now().into()])
+            .columns(cols.clone().into_iter().take(5).collect::<Vec<_>>())
+            .values_panic(vec![id.into(), name, email, phone, created_at])
             .returning(Query::select().columns(cols).take())
             .to_string(PostgresQueryBuilder);
 
