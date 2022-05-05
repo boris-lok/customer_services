@@ -1,5 +1,6 @@
 use sqlx::{Pool, Postgres};
 use tonic::{Request, Response, Status};
+use tracing::instrument;
 
 use crate::pb::customer_services_server::CustomerServices;
 use crate::pb::{
@@ -10,6 +11,7 @@ use crate::pb::{
 use super::services::CustomerService;
 use super::services::CustomerServiceImpl;
 
+#[derive(Debug)]
 pub struct CustomerServicesImpl {
     session: Pool<Postgres>,
 }
@@ -22,59 +24,68 @@ impl CustomerServicesImpl {
 
 #[tonic::async_trait]
 impl CustomerServices for CustomerServicesImpl {
+    #[instrument]
     async fn create(
         &self,
         request: Request<CreateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
+        tracing::info!(message = "Got a request to create a customer.");
+
         let request = request.into_inner();
 
         let services = CustomerServiceImpl::new(self.session.clone());
 
         let customer = services.create(request).await.map(|e| e.into());
 
-        if customer.is_err() {
-            return Err(Status::failed_precondition("failed to create a customer"));
-        }
-
-        Ok(Response::new(customer.unwrap()))
+        customer.map(Response::new).map_err(|err| {
+            let msg = err.to_string();
+            tracing::error!(message = "failed to create a customer", %msg);
+            Status::failed_precondition(msg)
+        })
     }
 
+    #[instrument]
     async fn update(
         &self,
         request: Request<UpdateCustomerRequest>,
     ) -> Result<Response<Customer>, Status> {
         let request = request.into_inner();
+        let id = request.id;
+        tracing::info!(message = "Got a request to update a customer", %id);
 
         let services = CustomerServiceImpl::new(self.session.clone());
 
         let customer = services.update(request).await.map(|e| e.into());
 
-        if customer.is_err() {
-            return Err(Status::failed_precondition("failed to update a customer."));
-        }
-
-        Ok(Response::new(customer.unwrap()))
+        customer.map(Response::new).map_err(|err| {
+            let msg = err.to_string();
+            tracing::error!(message = "failed to update a customer", %msg);
+            Status::failed_precondition(msg)
+        })
     }
 
+    #[instrument]
     async fn get(
         &self,
         request: Request<GetCustomerRequest>,
     ) -> Result<Response<GetCustomerResponse>, Status> {
         let id = request.into_inner().id;
+        tracing::info!(message = "Get a request to get a customer", %id);
 
         let services = CustomerServiceImpl::new(self.session.clone());
 
         let customer = services.get(id as i64).await.map(|s| s.map(|e| e.into()));
 
-        if customer.is_err() {
-            return Err(Status::failed_precondition("failed to get a customer."));
-        }
-
-        Ok(Response::new(GetCustomerResponse {
-            customer: customer.unwrap(),
-        }))
+        customer
+            .map(|c| Response::new(GetCustomerResponse { customer: c }))
+            .map_err(|err| {
+                let msg = err.to_string();
+                tracing::error!(message = "failed to get a customer", %msg);
+                Status::failed_precondition(msg)
+            })
     }
 
+    #[instrument]
     async fn list(
         &self,
         request: Request<ListCustomerRequest>,
@@ -89,10 +100,10 @@ impl CustomerServices for CustomerServicesImpl {
             ListCustomerResponse { customers: c }
         });
 
-        if customers.is_err() {
-            return Err(Status::failed_precondition("failed to list customers"));
-        }
-
-        Ok(Response::new(customers.unwrap()))
+        customers.map(Response::new).map_err(|err| {
+            let msg = err.to_string();
+            tracing::error!(message = "failed to update a customer", %msg);
+            Status::failed_precondition(msg)
+        })
     }
 }

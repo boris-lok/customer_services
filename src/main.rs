@@ -30,7 +30,11 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    dotenv::from_path("env/dev.env");
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
+    let _ = dotenv::from_path("env/dev.env").unwrap();
 
     let postgres = PostgresConfig::new();
 
@@ -39,6 +43,8 @@ async fn main() -> AppResult<()> {
     let customer_service = CustomerServicesImpl::new(database_connection.clone());
 
     let addr = "127.0.0.1:50001".parse().unwrap();
+
+    tracing::info!(message = "Starting server.", %addr);
 
     Server::builder()
         .add_service(CustomerServicesServer::new(customer_service))

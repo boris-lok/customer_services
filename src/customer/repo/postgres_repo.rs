@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use futures::FutureExt;
 use sea_query::Query;
 use sea_query::{Expr, PostgresQueryBuilder};
-use tracing::warn;
 
 use common::utils::alias::{AppResult, PostgresAcquire};
 use common::utils::error::AppError;
@@ -38,8 +37,6 @@ impl CustomerRepo for CustomerRepoImpl {
             .from(Customers::Table)
             .and_where(Expr::col(Customers::Id).eq(id))
             .to_string(PostgresQueryBuilder);
-
-        dbg!(&sql);
 
         sqlx::query_as::<_, Customer>(&sql)
             .fetch_optional(&mut *conn)
@@ -80,8 +77,6 @@ impl CustomerRepo for CustomerRepoImpl {
             .values_panic(vec![id.into(), name, email, phone, created_at])
             .returning(Query::select().columns(cols).take())
             .to_string(PostgresQueryBuilder);
-
-        dbg!(&sql);
 
         sqlx::query_as::<_, Customer>(&sql)
             .fetch_one(&mut *conn)
