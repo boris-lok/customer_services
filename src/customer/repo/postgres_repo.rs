@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use futures::FutureExt;
-use sea_query::Query;
+use sea_query::{Cond, Query};
 use sea_query::{Expr, PostgresQueryBuilder};
 
 use common::utils::alias::{AppResult, PostgresAcquire};
@@ -104,8 +104,13 @@ impl CustomerRepo for CustomerRepoImpl {
                 Customers::CreatedAt,
                 Customers::UpdatedAt,
             ])
-            .and_where_option(query.map(|e| Expr::col(Customers::Name).like(&e)))
-            .and_where_option(cursor.map(|e| Expr::col(Customers::Id).eq(e)))
+            .cond_where(Cond::all().add_option(cursor.map(|e| Expr::col(Customers::Id).eq(e))))
+            .cond_where(
+                Cond::any()
+                    .add_option(query.clone().map(|e| Expr::col(Customers::Name).like(&e)))
+                    .add_option(query.clone().map(|e| Expr::col(Customers::Email).like(&e)))
+                    .add_option(query.map(|e| Expr::col(Customers::Phone).like(&e))),
+            )
             .from(Customers::Table)
             .limit(page_size as u64)
             .to_string(PostgresQueryBuilder);
