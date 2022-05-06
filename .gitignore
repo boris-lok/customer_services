@@ -4,3 +4,4 @@ env/dev.env
 env/prod.env
 common
 proto/
+logs/

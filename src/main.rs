@@ -4,10 +4,11 @@ use lazy_static::lazy_static;
 use snowflake::SnowflakeGenerator;
 use tonic::transport::Server;
 
+use common::configs::config::Config;
 use common::configs::id_generator_config::IdGeneratorConfig;
 use common::configs::postgres_config::PostgresConfig;
 use common::utils::alias::AppResult;
-use common::utils::tools::create_database_connection;
+use common::utils::tools::{create_database_connection, tracing_initialize};
 use common::utils::tools::create_id_generator;
 
 use crate::customer::handler::CustomerServicesImpl;
@@ -30,15 +31,15 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
-
     let _ = dotenv::from_path("env/dev.env").unwrap();
 
-    let postgres = PostgresConfig::new();
+    let config = Config::new();
 
-    let database_connection = create_database_connection(postgres).await.unwrap();
+    tracing_initialize(config.debug, "logs/", "customers");
+
+    let database_config = PostgresConfig::new();
+
+    let database_connection = create_database_connection(database_config).await.unwrap();
 
     let customer_service = CustomerServicesImpl::new(database_connection.clone());
 
