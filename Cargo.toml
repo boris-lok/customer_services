@@ -31,6 +31,9 @@ features = ["serde"]
 version = "0.8.2"
 features = ["v4", "serde"]
 
+[dependencies.rust_decimal]
+version = "1.23.1"
+
 [dependencies.async-trait]
 version = "0.1.53"
 

@@ -324,6 +324,7 @@ dependencies = [
  "lazy_static",
  "prost",
  "r2d2_redis",
+ "rust_decimal",
  "sea-query",
  "serde",
  "snowflake",
